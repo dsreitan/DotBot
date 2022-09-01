@@ -1,0 +1,1 @@
+C# implementation of [Blizzards protobuf wrapper in C++](https://github.com/Blizzard/s2client-api)
