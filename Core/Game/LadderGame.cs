@@ -15,11 +15,13 @@ public class LadderGame : Game
     public override async Task Start()
     {
         var p1Connection = await Connect(GameSettings.GamePort);
+
         await p1Connection.JoinGame(PlayerOne.PlayerSetup, (
-            GameSettings.GamePort + 1,
             GameSettings.GamePort + 2,
-            GameSettings.StartPort + 1,
-            GameSettings.StartPort + 2));
+            GameSettings.GamePort + 3,
+            GameSettings.GamePort + 4,
+            GameSettings.GamePort + 5));
+
         await PlayerOne.Run(p1Connection);
     }
 }

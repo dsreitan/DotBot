@@ -40,7 +40,7 @@ public class ResponseHandler
     {
         if (key == RequestType.None)
         {
-            Log.Error($"ResponseHandler error: {response}");
+            Log.Error($"ResponseHandler invalid key: {response}");
             return;
         }
 

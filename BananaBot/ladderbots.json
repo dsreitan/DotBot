@@ -1,0 +1,10 @@
+{
+  "Bots": {
+    "BananaBot": {
+      "Race": "Terran",
+      "Type": "dotnetcore",
+      "RootPath": "./",
+      "FileName": "BananaBot.dll"
+    }
+  }
+}

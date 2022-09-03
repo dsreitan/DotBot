@@ -1,16 +1,19 @@
 ﻿namespace Core.Game;
 
-public class GameSettings
+public record GameSettings
 {
     public GameSettings(string[] args)
     {
         UseArgs(args);
     }
 
-    public GameMode GameMode { get; set; } = GameMode.Singleplayer;
+    public GameMode GameMode { get; set; } = GameMode.Multiplayer;
     public string ServerAddress { get; set; } = "127.0.0.1";
     public int GamePort { get; set; } = 8765;
+
+    [Obsolete("GamePort and StartPort are the same on ladder")]
     public int StartPort { get; set; } = 8775;
+
     public string OpponentId { get; set; } = "";
 
     public int ScreenWidth { get; set; } = 2560;

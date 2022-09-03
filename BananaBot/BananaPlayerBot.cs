@@ -3,11 +3,11 @@ using Core.Bot;
 using SC2APIProtocol;
 using SC2ClientApi;
 
-namespace Demo;
+namespace BananaBot;
 
-public class ScvRushBot : TerranBot
+public class BananaPlayerBot : TerranBot
 {
-    public ScvRushBot(IServiceProvider services) : base(services)
+    public BananaPlayerBot(IServiceProvider services) : base(services)
     {
     }
 
@@ -28,6 +28,11 @@ public class ScvRushBot : TerranBot
             var workers = new Squad();
             workers.AddUnits(Intel.GetWorkers());
             MicroService.AttackMove(workers, enemyBase.Point);
+        }
+
+        if (observation.Observation.GameLoop % 1000 == 0)
+        {
+            Log.Info($"Loop {observation.Observation.GameLoop}");
         }
     }
 }

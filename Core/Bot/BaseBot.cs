@@ -28,16 +28,24 @@ public abstract class BaseBot
 
     public virtual void OnStart(ResponseObservation firstObservation, ResponseData responseData, ResponseGameInfo gameInfo)
     {
+        Log.Info("Start");
         Intel.OnStart(firstObservation, responseData, gameInfo);
     }
 
     public virtual void OnFrame(ResponseObservation observation)
     {
+        if (observation?.Observation == null)
+        {
+            Log.Error("Obs null");
+        }
         Intel.OnFrame(observation);
         Requester.OnFrame();
     }
 
-    public abstract void OnEnd(ResponseObservation observation);
+    public virtual void OnEnd()
+    {
+        Log.Info($"End");
+    }
 
     internal async Task Run(GameConnection gameConnection)
     {
@@ -57,9 +65,13 @@ public abstract class BaseBot
         while (gameConnection.Status == Status.InGame)
         {
             await gameConnection.Step();
-            OnFrame(await gameConnection.Observation());
+
+            var obs = await gameConnection.Observation();
+            if (obs == null && gameConnection.Status == Status.Ended) break;
+            
+            OnFrame(obs);
         }
 
-        OnEnd(await gameConnection.Observation());
+        OnEnd();
     }
 }

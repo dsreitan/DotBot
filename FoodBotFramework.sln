@@ -5,11 +5,13 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "core\Core.csproj", "{DA29585B-B213-4D44-BD96-5B276C7C3746}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "demobot\Demo.csproj", "{1075DE5C-2C4D-4A3D-9F67-13942EFECB7E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SC2ClientApi", "sc2clientapi\SC2ClientApi.csproj", "{7DA2F100-ED75-42CC-9EDF-1F2DA6F7615A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SC2ClientProtocol", "sc2clientprotocol\SC2ClientProtocol.csproj", "{37A3E922-AD30-4F21-B4B8-0A5E9E23D2D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BananaBot", "BananaBot\BananaBot.csproj", "{0667224D-23E8-4568-B46B-FCF729A0414D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppleBot", "AppleBot\AppleBot.csproj", "{0991E900-8050-4F16-AB86-B70F50C73D41}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,10 +26,6 @@ Global
 		{DA29585B-B213-4D44-BD96-5B276C7C3746}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA29585B-B213-4D44-BD96-5B276C7C3746}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA29585B-B213-4D44-BD96-5B276C7C3746}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1075DE5C-2C4D-4A3D-9F67-13942EFECB7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1075DE5C-2C4D-4A3D-9F67-13942EFECB7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1075DE5C-2C4D-4A3D-9F67-13942EFECB7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1075DE5C-2C4D-4A3D-9F67-13942EFECB7E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7DA2F100-ED75-42CC-9EDF-1F2DA6F7615A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7DA2F100-ED75-42CC-9EDF-1F2DA6F7615A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DA2F100-ED75-42CC-9EDF-1F2DA6F7615A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -36,5 +34,13 @@ Global
 		{37A3E922-AD30-4F21-B4B8-0A5E9E23D2D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37A3E922-AD30-4F21-B4B8-0A5E9E23D2D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37A3E922-AD30-4F21-B4B8-0A5E9E23D2D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0667224D-23E8-4568-B46B-FCF729A0414D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0667224D-23E8-4568-B46B-FCF729A0414D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0667224D-23E8-4568-B46B-FCF729A0414D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0667224D-23E8-4568-B46B-FCF729A0414D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0991E900-8050-4F16-AB86-B70F50C73D41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0991E900-8050-4F16-AB86-B70F50C73D41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0991E900-8050-4F16-AB86-B70F50C73D41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0991E900-8050-4F16-AB86-B70F50C73D41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

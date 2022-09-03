@@ -11,13 +11,4 @@ public abstract class TerranBot : BaseBot
     {
         UnitService = services.GetRequiredService<IUnitService>();
     }
-
-    public override void OnStart(ResponseObservation firstObservation, ResponseData responseData, ResponseGameInfo gameInfo)
-    {
-        base.OnStart(firstObservation, responseData,gameInfo);
-    }
-    
-    public override void OnFrame(ResponseObservation observation){base.OnFrame(observation);}
-    public override void OnEnd(ResponseObservation observation){}
-
 }

@@ -13,16 +13,18 @@ public class GameConnection
     private const int TIMEOUT = 2000; //ms
     private const int TIMEOUT_LONG = 5000; //ms
     private readonly ResponseHandler _responseHandler;
+    private readonly ClientWebSocket _socket;
     private readonly CancellationToken _token = CancellationToken.None;
-    private ClientWebSocket? _socket;
     private Status _status;
-    public uint GameLoop { get; set; }
-    public uint PlayerId { get; set; }
 
     public GameConnection()
     {
+        _socket = new ClientWebSocket();
         _responseHandler = new ResponseHandler();
     }
+
+    public uint GameLoop { get; set; }
+    public uint PlayerId { get; set; }
 
     private string GameVersion { get; set; } = string.Empty;
 
@@ -47,7 +49,6 @@ public class GameConnection
         {
             try
             {
-                _socket = new ClientWebSocket();
                 await _socket.ConnectAsync(uri, _token);
             }
             catch (AggregateException ex)
@@ -121,17 +122,13 @@ public class GameConnection
                 PlayerName = playerSetup.PlayerName,
                 Options = new InterfaceOptions
                 {
-                    FeatureLayer = new SpatialCameraSetup
-                    {
-                        CropToPlayableArea = true, AllowCheatingLayers = false, MinimapResolution = new Size2DI { X = 16, Y = 16 },
-                        Resolution = new Size2DI { X = 128, Y = 128 }, Width = 10
-                    },
                     Raw = true,
                     Score = true,
                     ShowCloaked = true,
                     ShowBurrowedShadows = true,
-                    RawCropToPlayableArea = true,
-                    RawAffectsSelection = true
+                    ShowPlaceholders = true,
+                    RawAffectsSelection = false,
+                    RawCropToPlayableArea = false
                 }
             }
         };
@@ -154,8 +151,12 @@ public class GameConnection
         PlayerId = response.JoinGame.PlayerId;
         return response.JoinGame;
     }
-    
-    public async Task<Response?> Step() => await SendAndReceiveAsync(ClientConstants.RequestStep);
+
+    public async Task<Response?> Step()
+    {
+        return await SendAndReceiveAsync(ClientConstants.RequestStep);
+    }
+
     public async Task<ResponseObservation?> Observation(uint? gameLoop = null)
     {
         var request = ClientConstants.RequestObservation;
@@ -163,10 +164,12 @@ public class GameConnection
         if (gameLoop != null)
             request.Observation.GameLoop = gameLoop.Value;
 
+        if (Status == Status.Ended) return null;
+
         var response = await SendAndReceiveAsync(request);
         if (response?.Observation == null)
         {
-            Log.Warning("Observation null");
+            Log.Warning("Observation null. Probably timeout.");
             return null;
         }
 
@@ -178,7 +181,7 @@ public class GameConnection
     {
         if (actions.Count == 0) return null;
 
-        var request = new Request {Action = new()};
+        var request = new Request { Action = new RequestAction() };
         request.Action.Actions.AddRange(actions);
 
         var response = await SendAndReceiveAsync(request);
@@ -189,7 +192,7 @@ public class GameConnection
     {
         if (debugCommands.Count == 0) return null;
 
-        var response = await SendAndReceiveAsync(new() {Debug = new() {Debug = {debugCommands}}});
+        var response = await SendAndReceiveAsync(new Request { Debug = new RequestDebug { Debug = { debugCommands } } });
 
         return response?.Debug;
     }
@@ -210,6 +213,12 @@ public class GameConnection
     {
         Response? response = null;
 
+        if (req.RequestCase == Request.RequestOneofCase.None)
+        {
+            Log.Warning("Request case none");
+            return response;
+        }
+
         if (_socket.State != WebSocketState.Open)
         {
             Log.Warning($"Can't send request due to socket state {_socket.State}");
@@ -224,14 +233,15 @@ public class GameConnection
         });
 
         _responseHandler.RegisterHandler(req.RequestCase, handler);
+
         await SendAsync(req);
-        //TODO: find out why join requests never get any responses
-        if (req.RequestCase is not Request.RequestOneofCase.JoinGame)
-        {
-            var shouldWaitLonger =
-                req.RequestCase is Request.RequestOneofCase.Step or Request.RequestOneofCase.JoinGame or Request.RequestOneofCase.CreateGame;
-            if (!handlerResolve.Wait(shouldWaitLonger ? TIMEOUT_LONG : TIMEOUT)) Log.Error($"Request timed out \n{req}");
-        }
+
+        var shouldWaitLonger =
+            req.RequestCase is Request.RequestOneofCase.Step or Request.RequestOneofCase.CreateGame;
+
+        if (req.RequestCase != Request.RequestOneofCase.JoinGame && !handlerResolve.Wait(shouldWaitLonger ? TIMEOUT_LONG : TIMEOUT) &&
+            Status != Status.Ended)
+            Log.Error($"Request timed out \n{req}");
 
         _responseHandler.DeregisterHandler(req.RequestCase, handler);
 
@@ -240,14 +250,15 @@ public class GameConnection
 
     private async Task SendAsync(Request req)
     {
-        await _socket.SendAsync
-            (new ArraySegment<byte>(req.ToByteArray()), WebSocketMessageType.Binary, true, _token);
+        var buffer = new ReadOnlyMemory<byte>(req.ToByteArray());
+
+        await _socket.SendAsync(buffer, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, _token);
     }
 
     private async Task ReceiveForever()
     {
         var buffer = new ArraySegment<byte>(new byte[READ_BUFFER]);
-        while (true)
+        while (_socket.State == WebSocketState.Open)
         {
             WebSocketReceiveResult result;
             using var ms = new MemoryStream();
@@ -259,7 +270,8 @@ public class GameConnection
 
             var response = Response.Parser.ParseFrom(ms.GetBuffer(), 0, (int)ms.Position);
             Status = response.Status;
-            _responseHandler.Handle((Request.RequestOneofCase)response.ResponseCase, response);
+            if (Status != Status.Ended)
+                _responseHandler.Handle((Request.RequestOneofCase)response.ResponseCase, response);
         }
     }
 

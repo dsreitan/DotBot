@@ -25,10 +25,10 @@ public class MultiplayerGame : Game
         await p1Connection.CreateGame(PlayerOne.PlayerSetup, PlayerTwo.PlayerSetup, GameSettings.MapName);
 
         var multiplayerPorts = (
-            GameSettings.GamePort + 1,
             GameSettings.GamePort + 2,
-            GameSettings.StartPort + 1,
-            GameSettings.StartPort + 2);
+            GameSettings.GamePort + 3,
+            GameSettings.GamePort + 4,
+            GameSettings.GamePort + 5);
 
         await Task.WhenAll(
             p1Connection.JoinGame(PlayerOne.PlayerSetup, multiplayerPorts),
