@@ -11,15 +11,13 @@ public class GameConnection
     private const int READ_BUFFER = 1024;
     private const int MAX_CONNECTION_ATTEMPTS = 25;
     private const int TIMEOUT = 2000; //ms
-    private const int TIMEOUT_LONG = 5000; //ms
     private readonly ResponseHandler _responseHandler;
-    private readonly ClientWebSocket _socket;
     private readonly CancellationToken _token = CancellationToken.None;
+    private ClientWebSocket? _socket;
     private Status _status;
 
     public GameConnection()
     {
-        _socket = new ClientWebSocket();
         _responseHandler = new ResponseHandler();
     }
 
@@ -44,43 +42,46 @@ public class GameConnection
         var uri = new Uri($"ws://{address}:{port}/sc2api");
         Log.Info($"Connecting to {uri}");
 
-        var connectionAttempt = 1;
+        var attempt = 1;
         do
         {
             try
             {
+                _socket = new ClientWebSocket();
+
+                // prevents sending PONG request, which crashes the aiarena rust client
+                // creds to Tyr for the solution: https://github.com/SimonPrins/TyrSc2/commit/12c4eaddf9dfae820b78fa951ab176542303d529#diff-eabe04740a623c75464b7c21a47382cb5eba99a316365ac57d166a3b1dbf099a
+                _socket.Options.KeepAliveInterval = TimeSpan.FromDays(30);
+
                 await _socket.ConnectAsync(uri, _token);
-            }
-            catch (AggregateException ex)
-            {
-                // handle AggEx differently?
-                Log.Info($"Connection to {uri} attempt {connectionAttempt}/{maxAttempts} failed: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Log.Info($"Connection to {uri} attempt {connectionAttempt}/{maxAttempts} failed: {ex.Message}");
+                Log.Info($"Connection to {uri} attempt {attempt}/{maxAttempts} failed: {ex.Message}");
             }
 
-            connectionAttempt++;
+            attempt++;
             await Task.Delay(TIMEOUT, _token);
-        } while (_socket.State != WebSocketState.Open && connectionAttempt <= maxAttempts);
+        } while (_socket.State != WebSocketState.Open && attempt <= maxAttempts);
 
         if (_socket.State != WebSocketState.Open)
             return false;
 
         Log.Success($"Connected to {uri}. Start receiving responses from client");
+
         Task.Factory.StartNew(ReceiveForever, TaskCreationOptions.LongRunning);
+
         await Task.Delay(TIMEOUT);
 
         var pingResponse = await SendAndReceiveAsync(ClientConstants.RequestPing);
         if (pingResponse == null)
         {
-            Log.Error($"Ping to {uri} failed");
+            Log.Error($"Ping failed {uri}");
             return false;
         }
 
         Log.Info(
-            $"Pinged {uri} - [GameVersion={pingResponse.Ping.GameVersion}] [DataVersion={pingResponse.Ping.DataVersion}] [DataBuild={pingResponse.Ping.DataBuild}] [BaseBuild={pingResponse.Ping.BaseBuild}]");
+            $"Ping OK [GameVersion={pingResponse.Ping.GameVersion}] [DataVersion={pingResponse.Ping.DataVersion}] [DataBuild={pingResponse.Ping.DataBuild}] [BaseBuild={pingResponse.Ping.BaseBuild}]");
         GameVersion = pingResponse.Ping.GameVersion;
         return pingResponse.Ping.HasGameVersion;
     }
@@ -112,7 +113,7 @@ public class GameConnection
         return response?.CreateGame;
     }
 
-    public async Task<ResponseJoinGame?> JoinGame(PlayerSetup playerSetup, (int, int, int, int)? multiplayerPorts = null)
+    public async Task JoinGame(PlayerSetup playerSetup, (int, int, int, int)? multiplayerPorts = null)
     {
         var request = new Request
         {
@@ -141,15 +142,8 @@ public class GameConnection
         }
 
         Log.Info($"{playerSetup.PlayerName} Joining game");
-        var response = await SendAndReceiveAsync(request);
-        if (response?.JoinGame == null || response.JoinGame.HasError)
-            // getting null response, but the clients are still joining :/
-            // Log.Error($"{Player.PlayerName} Joining game failed {response?.JoinGame.Error}");
-            return null;
-
-        Log.Success($"{playerSetup.PlayerName} Joined game {response.JoinGame}");
-        PlayerId = response.JoinGame.PlayerId;
-        return response.JoinGame;
+        await SendAsync(request);
+        Log.Success($"{playerSetup.PlayerName} Joined game");
     }
 
     public async Task<Response?> Step()
@@ -163,8 +157,6 @@ public class GameConnection
 
         if (gameLoop != null)
             request.Observation.GameLoop = gameLoop.Value;
-
-        if (Status == Status.Ended) return null;
 
         var response = await SendAndReceiveAsync(request);
         if (response?.Observation == null)
@@ -209,7 +201,7 @@ public class GameConnection
         return response?.Data;
     }
 
-    public async Task<Response?> SendAndReceiveAsync(Request req)
+    private async Task<Response?> SendAndReceiveAsync(Request req)
     {
         Response? response = null;
 
@@ -236,11 +228,7 @@ public class GameConnection
 
         await SendAsync(req);
 
-        var shouldWaitLonger =
-            req.RequestCase is Request.RequestOneofCase.Step or Request.RequestOneofCase.CreateGame;
-
-        if (req.RequestCase != Request.RequestOneofCase.JoinGame && !handlerResolve.Wait(shouldWaitLonger ? TIMEOUT_LONG : TIMEOUT) &&
-            Status != Status.Ended)
+        if (!handlerResolve.Wait(TIMEOUT) && Status != Status.Ended)
             Log.Error($"Request timed out \n{req}");
 
         _responseHandler.DeregisterHandler(req.RequestCase, handler);
@@ -250,7 +238,7 @@ public class GameConnection
 
     private async Task SendAsync(Request req)
     {
-        var buffer = new ReadOnlyMemory<byte>(req.ToByteArray());
+        var buffer = new ArraySegment<byte>(req.ToByteArray());
 
         await _socket.SendAsync(buffer, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, _token);
     }
@@ -270,8 +258,7 @@ public class GameConnection
 
             var response = Response.Parser.ParseFrom(ms.GetBuffer(), 0, (int)ms.Position);
             Status = response.Status;
-            if (Status != Status.Ended)
-                _responseHandler.Handle((Request.RequestOneofCase)response.ResponseCase, response);
+            _responseHandler.Handle((Request.RequestOneofCase)response.ResponseCase, response);
         }
     }
 

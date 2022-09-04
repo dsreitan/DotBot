@@ -11,7 +11,10 @@ public record GameSettings
     public string ServerAddress { get; set; } = "127.0.0.1";
     public int GamePort { get; set; } = 8765;
 
-    [Obsolete("GamePort and StartPort are the same on ladder")]
+    /// <summary>
+    /// GamePort and StartPort are the same on ladder (8765)
+    /// StartPort should only be used for multiplayer with two clients (Game == host, Start == guest)
+    /// </summary>
     public int StartPort { get; set; } = 8775;
 
     public string OpponentId { get; set; } = "";

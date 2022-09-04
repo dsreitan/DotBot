@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SC2ClientProtocol", "sc2cli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BananaBot", "BananaBot\BananaBot.csproj", "{0667224D-23E8-4568-B46B-FCF729A0414D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppleBot", "AppleBot\AppleBot.csproj", "{0991E900-8050-4F16-AB86-B70F50C73D41}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,9 +36,5 @@ Global
 		{0667224D-23E8-4568-B46B-FCF729A0414D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0667224D-23E8-4568-B46B-FCF729A0414D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0667224D-23E8-4568-B46B-FCF729A0414D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0991E900-8050-4F16-AB86-B70F50C73D41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0991E900-8050-4F16-AB86-B70F50C73D41}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0991E900-8050-4F16-AB86-B70F50C73D41}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0991E900-8050-4F16-AB86-B70F50C73D41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

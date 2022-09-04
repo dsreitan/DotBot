@@ -1,4 +1,6 @@
-﻿using Google.Protobuf.Collections;
+﻿using Core.Data;
+using Core.Extensions;
+using Google.Protobuf.Collections;
 using SC2APIProtocol;
 using SC2ClientApi;
 using Attribute = SC2APIProtocol.Attribute;
@@ -7,12 +9,13 @@ namespace Core.Intel;
 
 public class IntelService : IIntelService
 {
-    private readonly Dictionary<uint, AbilityData> abilityDictionary = new();
-    private readonly Dictionary<uint, BuffData> buffDictionary = new();
-    private readonly Dictionary<uint, UnitTypeData> unitTypeDictionary = new();
-    private readonly Dictionary<uint, UpgradeData> upgradeDictionary = new();
-
+    private IDataService _dataService;
     public Dictionary<ulong, IntelUnit> Workers = new(), Structures = new(), Units = new(), EnemyUnits = new();
+
+    public IntelService(IDataService dataService)
+    {
+        _dataService = dataService;
+    }
 
     public List<IntelColony> Colonies { get; set; } = new();
 
@@ -33,15 +36,7 @@ public class IntelService : IIntelService
 
     public void OnStart(ResponseObservation firstObservation, ResponseData? responseData = null, ResponseGameInfo? gameInfo = null)
     {
-        foreach (var ability in responseData.Abilities)
-            abilityDictionary.Add(ability.AbilityId, ability);
-        foreach (var buff in responseData.Buffs)
-            buffDictionary.Add(buff.BuffId, buff);
-        foreach (var unitType in responseData.Units)
-            unitTypeDictionary.Add(unitType.UnitId, unitType);
-        foreach (var upgrade in responseData.Upgrades)
-            upgradeDictionary.Add(upgrade.UpgradeId, upgrade);
-
+        
         if (gameInfo != null)
             EnemyColonies.Add(new IntelColony { Point = gameInfo.StartRaw.StartLocations.Last() });
 
@@ -106,7 +101,7 @@ public class IntelService : IIntelService
             else
                 Workers.Add(unit.Tag, new IntelUnit(unit));
         }
-        else if (IsStructure(unit.UnitType))
+        else if (_dataService.IsStructure(unit.UnitType))
         {
             if (Structures.ContainsKey(unit.Tag))
                 Structures[unit.Tag].Data = unit;
@@ -114,18 +109,10 @@ public class IntelService : IIntelService
                 Structures.Add(unit.Tag, new IntelUnit(unit));
         }
     }
-
-    private bool IsStructure(uint unitType)
-    {
-        return unitTypeDictionary.TryGetValue(unitType, out var value) && value.Attributes.Contains(Attribute.Structure);
-    }
 }
 
 public interface IIntelService
 {
-    public Observation Observation { get; set; }
-    // Structures method take type, return list unit
-
     public List<IntelColony> EnemyColonies { get; set; }
 
     public List<IntelUnit> GetStructures(UnitType unitType);

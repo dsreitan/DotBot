@@ -17,9 +17,6 @@
 
     <ItemGroup>
       <None Remove="ladderbots.json" />
-      <Content Include="ladderbots.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
     </ItemGroup>
 
 </Project>

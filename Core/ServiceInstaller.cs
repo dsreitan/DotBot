@@ -1,4 +1,5 @@
-﻿using Core.Intel;
+﻿using Core.Data;
+using Core.Intel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -10,8 +11,9 @@ public static class ServiceInstaller
     {
         return builder.ConfigureServices((context, services) =>
         {
+            services.AddScoped<IDataService, DataService>();
             services.AddScoped<IIntelService, IntelService>();
-            services.AddScoped<IRequestService, RequestService>();
+            services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<IMicroService, MicroService>();
             services.AddScoped<IUnitService, UnitService>();
         });

@@ -1,6 +1,6 @@
-﻿namespace SC2ClientApi;
+﻿namespace Core.Extensions;
 
-public static class UnitTypeHelpers
+public static class UnitTypeExtensions
 {
     public static bool Is(this uint n, UnitType e) => n == (uint) e;
     public static bool IsWorker(this uint u) => (UnitType)u is UnitType.TERRAN_SCV or UnitType.PROTOSS_PROBE or UnitType.ZERG_DRONE;

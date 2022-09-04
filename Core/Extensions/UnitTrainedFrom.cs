@@ -1,4 +1,4 @@
-﻿namespace SC2ClientApi;
+﻿namespace Core.Extensions;
 
 public static class UnitTrainedFrom
 {

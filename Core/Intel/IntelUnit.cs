@@ -1,4 +1,5 @@
-﻿using Core.Model;
+﻿using Core.Extensions;
+using Core.Model;
 using SC2APIProtocol;
 
 namespace Core.Intel;

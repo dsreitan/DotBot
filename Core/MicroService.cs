@@ -1,35 +1,23 @@
 ﻿using SC2APIProtocol;
-using Action = SC2APIProtocol.Action;
 
 namespace Core;
 
 public class MicroService : IMicroService
 {
-    private readonly IRequestService _requestService;
+    private readonly IMessageService _messageService;
 
-    public MicroService(IRequestService requestService)
+    public MicroService(IMessageService messageService)
     {
-        _requestService = requestService;
+        _messageService = messageService;
     }
 
-    public void AttackMove(Squad squad, Point2D? target, bool queue = false)
+    public void AttackMove(Squad squad, Point2D target, bool queue = false)
     {
-        foreach (var unit in squad.Units)
-        {
-            var command = new ActionRawUnitCommand
-            {
-                AbilityId = (int)Ability.ATTACK,
-                TargetWorldSpacePos = target,
-                QueueCommand = queue,
-                UnitTags = { unit.Tag }
-            };
-
-            _requestService.Actions.Add(new Action { ActionRaw = new ActionRaw { UnitCommand = command } });
-        }
+        _messageService.Action(Ability.ATTACK, target, squad.Units.Select(x => x.Tag), queue);
     }
 }
 
 public interface IMicroService
 {
-    public void AttackMove(Squad squad, Point2D? target, bool queue = false);
+    public void AttackMove(Squad squad, Point2D target, bool queue = false);
 }

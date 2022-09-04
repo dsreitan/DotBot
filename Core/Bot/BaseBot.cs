@@ -1,4 +1,5 @@
-﻿using Core.Intel;
+﻿using Core.Data;
+using Core.Intel;
 using Microsoft.Extensions.DependencyInjection;
 using SC2APIProtocol;
 using SC2ClientApi;
@@ -7,44 +8,38 @@ namespace Core.Bot;
 
 public abstract class BaseBot
 {
+    protected readonly IDataService Data;
     protected readonly IIntelService Intel;
+    protected readonly IMessageService MessageService;
     protected readonly IMicroService MicroService;
-    protected readonly IRequestService Requester;
 
     public BaseBot(IServiceProvider services, Race race)
     {
+        Data = services.GetRequiredService<IDataService>();
         Intel = services.GetRequiredService<IIntelService>();
-        Requester = services.GetRequiredService<IRequestService>();
+        MessageService = services.GetRequiredService<IMessageService>();
         MicroService = services.GetRequiredService<IMicroService>();
-        PlayerSetup = new PlayerSetup
-        {
-            PlayerName = GetType().Name,
-            Race = race,
-            Type = PlayerType.Participant
-        };
+        PlayerSetup = new PlayerSetup { PlayerName = GetType().Name, Race = race, Type = PlayerType.Participant };
     }
 
     internal PlayerSetup PlayerSetup { get; init; }
 
     public virtual void OnStart(ResponseObservation firstObservation, ResponseData responseData, ResponseGameInfo gameInfo)
     {
-        Log.Info("Start");
+        Data.OnStart(firstObservation, responseData, gameInfo);
         Intel.OnStart(firstObservation, responseData, gameInfo);
     }
 
     public virtual void OnFrame(ResponseObservation observation)
     {
-        if (observation?.Observation == null)
-        {
-            Log.Error("Obs null");
-        }
+        if (observation?.Observation == null) Log.Error("Obs null");
         Intel.OnFrame(observation);
-        Requester.OnFrame();
+        MessageService.OnFrame();
     }
 
     public virtual void OnEnd()
     {
-        Log.Info($"End");
+        Log.Info("End");
     }
 
     internal async Task Run(GameConnection gameConnection)
@@ -54,7 +49,7 @@ public abstract class BaseBot
             // loading screen
         }
 
-        Requester.SetConnection(gameConnection);
+        MessageService.SetConnection(gameConnection);
 
         OnStart(
             await gameConnection.Observation(),
@@ -67,8 +62,8 @@ public abstract class BaseBot
             await gameConnection.Step();
 
             var obs = await gameConnection.Observation();
-            if (obs == null && gameConnection.Status == Status.Ended) break;
-            
+            if (obs == null || gameConnection.Status == Status.Ended) break;
+
             OnFrame(obs);
         }
 

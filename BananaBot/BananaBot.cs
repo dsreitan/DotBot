@@ -1,13 +1,14 @@
 ﻿using Core;
 using Core.Bot;
+using Core.Extensions;
 using SC2APIProtocol;
 using SC2ClientApi;
 
 namespace BananaBot;
 
-public class BananaPlayerBot : TerranBot
+public class BananaBot : TerranBot
 {
-    public BananaPlayerBot(IServiceProvider services) : base(services)
+    public BananaBot(IServiceProvider services) : base(services)
     {
     }
 
@@ -16,7 +17,7 @@ public class BananaPlayerBot : TerranBot
     {
         base.OnFrame(observation);
         UnitService.Train(UnitType.TERRAN_SCV);
-        if (!hasAttacked && Intel.Observation.PlayerCommon.FoodWorkers == 14)
+        if (!hasAttacked && Intel.GetWorkers().Count == 14)
         {
             hasAttacked = true;
             

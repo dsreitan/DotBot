@@ -21,6 +21,6 @@ public static class ClientConstants
     public static readonly Request RequestAvailableMaps = new() {AvailableMaps = new()};
     public static readonly Request RequestPing = new() {Ping = new()};
     public static readonly Request RequestObservation = new() {Observation = new()};
-    public static readonly Request RequestStep = new() {Step = new() {Count = 2}};
+    public static readonly Request RequestStep = new() {Step = new() {Count = 1}};
     public static readonly Request RequestData = new() {Data = new() {AbilityId = true, BuffId = true, UnitTypeId = true, UpgradeId = true}};
 }

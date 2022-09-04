@@ -1,18 +1,17 @@
-﻿using Core.Intel;
-using SC2APIProtocol;
+﻿using Core.Extensions;
+using Core.Intel;
 using SC2ClientApi;
-using Action = SC2APIProtocol.Action;
 
 namespace Core;
 
 public class UnitService : IUnitService
 {
     private readonly IIntelService _intelService;
-    private readonly IRequestService _requestService;
+    private readonly IMessageService _messageService;
 
-    public UnitService(IRequestService requestService, IIntelService intelService)
+    public UnitService(IMessageService messageService, IIntelService intelService)
     {
-        _requestService = requestService;
+        _messageService = messageService;
         _intelService = intelService;
     }
 
@@ -23,14 +22,7 @@ public class UnitService : IUnitService
 
         var producer = producers.Single();
 
-        foreach (var unit in _intelService.GetStructures(producer.producerType))
-        {
-            var command = new ActionRawUnitCommand();
-            command.UnitTags.Add(unit.Tag);
-            command.AbilityId = (int)producer.ability;
-
-            _requestService.Actions.Add(new Action { ActionRaw = new ActionRaw { UnitCommand = command } });
-        }
+        _messageService.Action(producer.ability, 0, _intelService.GetStructures(producer.producerType).Select(x => x.Tag));
     }
 }
 
